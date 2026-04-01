@@ -1,0 +1,170 @@
+openapi: 3.0.3
+info:
+  title: Template Service Api
+  version: 1.0.0
+  description: >-
+    Servicio para consultar precios de productos por fecha y marca
+
+  contact:
+    name: John Quiroga
+    email: johnquirogac@gmail.com
+
+servers:
+  - url: 'http://localhost:8080/'
+
+security:
+  - oAuth2ClientCredentials: [ ]
+tags:
+  - name: Prices
+    description: Query product prices
+
+paths:
+
+  /price:
+    get:
+      tags:
+        - Prices
+      summary: |
+        Consultar precions
+      description: |
+        Long description.
+      operationId: getPrice
+
+      parameters:
+        - $ref: "#/components/parameters/BrandId"
+        - $ref: "#/components/parameters/ProductId"
+        - $ref: "#/components/parameters/ApplicationDate"
+
+      responses:
+        '200':
+          description: |
+            Price returned.
+          content:
+            'application/json':
+              schema:
+                format: ApiResponse
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/PricesResponse'
+              examples:
+                ResponseBodyExample:
+                  $ref: "#/components/examples/ResponseBodyExample"
+        '400':
+          description: 'Bad request'
+          content:
+            'application/json':
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+              examples:
+                ErrorResponse:
+                  $ref: '#/components/examples/BadResponseExample'
+
+        '500':
+          description: 'Internal server error'
+          content:
+            'application/json':
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+              examples:
+                ErrorResponse:
+                  $ref: '#/components/examples/ErrorResponseExample'
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        data:
+          type: object
+        notification:
+          $ref: '#/components/schemas/Notification'
+    PricesResponse:
+      type: object
+      properties:
+        productId:
+          type: integer
+        brandId:
+          type: integer
+        priceList:
+          type: integer
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        price:
+          type: number
+          format: double
+    Notification:
+      type: object
+      properties:
+        description:
+          type: string
+          description: 'Message which explains the notification.'
+        response_time:
+          type: string
+          format: date-time
+          example: 2026-04-01T20:38:45
+          description: 'Timestamp of the notification.'
+        code:
+          type: string
+          description: 'Internal application error code.'
+
+  examples:
+
+    ResponseBodyExample:
+      value:
+        data:
+          value: 'any value'
+        notification: null
+
+    ErrorResponseExample:
+      value:
+        data: null
+        notification:
+          -  description: 'Explains the notification'
+             response_time: '2017-10-12T20:38:45.408Z'
+             code: '1001'
+
+    BadResponseExample:
+      value:
+        data: null
+        notification:
+          -  description: 'Explains the notification'
+             response_time: '2017-10-12T20:38:45.408Z'
+             code: '1002'
+
+  parameters:
+    BrandId:
+      name: brandId
+      in: query
+      required: true
+      schema:
+        type: integer
+      description: ID of Brand provider
+      example: 1
+
+    ProductId:
+      name: productId
+      in: query
+      required: true
+      schema:
+        type: integer
+      description: ID of product
+      example: 1
+
+    ApplicationDate:
+      name: applicationDate
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date-time
+      description: Date of of price application
+      example: 1
+

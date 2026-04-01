@@ -1,0 +1,25 @@
+info:
+  name: GetPrices
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: http://localhost:8080/api/price?productId=0&brandId=0&applicationDate=2020-06-14T14:00:00
+  params:
+    - name: productId
+      value: "0"
+      type: query
+    - name: brandId
+      value: "0"
+      type: query
+    - name: applicationDate
+      value: 2020-06-14T14:00:00
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
