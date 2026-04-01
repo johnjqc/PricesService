@@ -1,1 +1,9 @@
 rootProject.name = 'PricesService'
+
+include 'domain'
+include 'application'
+include 'bootstrap'
+
+include 'adapters'
+include 'adapters:rest-adapter'
+include 'adapters:persistence-adapter'

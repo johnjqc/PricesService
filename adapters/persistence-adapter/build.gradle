@@ -1,0 +1,8 @@
+plugins {
+    id 'java'
+}
+dependencies {
+    implementation project(':application')
+    implementation project(':domain')
+
+}
