@@ -1,5 +1,6 @@
 package com.capitole.prices.persistence.repository;
 
+import com.capitole.prices.persistence.config.JpaTestConfig;
 import com.capitole.prices.persistence.entity.PriceEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @Configuration
 @EnableJpaRepositories("com.capitole.prices.persistence")
 @EntityScan("com.capitole.prices.persistence.entity")
-class JpaTestConfig {
+public class JpaTestConfig {
 }
