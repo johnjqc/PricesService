@@ -1,13 +1,19 @@
-package com.capitole.prices.adapter.rest.dto;
+package com.capitole.prices.domain.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record PriceResponse(
-        Long productId,
+public record Price(
+
         Long brandId,
+        Long productId,
         Integer priceList,
+        Integer priority,
+
         LocalDateTime startDate,
         LocalDateTime endDate,
-        BigDecimal price
+
+        BigDecimal price,
+        String currency
+
 ) {}

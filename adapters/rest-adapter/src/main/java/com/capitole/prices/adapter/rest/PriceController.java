@@ -3,6 +3,8 @@ package com.capitole.prices.adapter.rest;
 import com.capitole.prices.adapter.rest.dto.ApiResponse;
 import com.capitole.prices.adapter.rest.dto.NotificationResponse;
 import com.capitole.prices.adapter.rest.dto.PriceResponse;
+import com.capitole.prices.application.usecase.GetProductPrice;
+import com.capitole.prices.domain.model.Price;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,12 @@ import java.time.LocalDateTime;
 @RequestMapping("/api")
 public class PriceController {
 
+    private final GetProductPrice getProductPrice;
+
+    public PriceController(GetProductPrice getProductPrice) {
+        this.getProductPrice = getProductPrice;
+    }
+
     @GetMapping("/price")
     public ResponseEntity<ApiResponse<PriceResponse>> getPrice(
             @RequestParam(name = "productId") Long productId,
@@ -25,7 +33,16 @@ public class PriceController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime applicationDate) {
 
-        PriceResponse response = new PriceResponse(0L, 0L,0L, LocalDateTime.now(), LocalDateTime.now(), BigDecimal.ZERO);
+        Price price = getProductPrice.execute(brandId, productId, applicationDate);
+
+        PriceResponse response = new PriceResponse(
+                price.productId(),
+                price.brandId(),
+                price.priceList(),
+                price.startDate(),
+                price.endDate(),
+                price.price());
+
         NotificationResponse notificationResponse = new NotificationResponse("SUCCESS",
                 LocalDateTime.now(),
                 "SCS-00");
