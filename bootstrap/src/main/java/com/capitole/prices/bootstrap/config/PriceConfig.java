@@ -5,7 +5,7 @@ import com.capitole.prices.adapters.persistence.mapper.PriceMapper;
 import com.capitole.prices.adapters.persistence.repository.PriceJpaRepository;
 import com.capitole.prices.application.port.in.GetProductPrice;
 import com.capitole.prices.application.usecase.GetProductPriceUseCase;
-import com.capitole.prices.domain.port.PriceRepositoryPort;
+import com.capitole.prices.application.port.out.PriceRepositoryPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

@@ -48,7 +48,7 @@ public class PriceControllerTest {
             int expectedPriceList,
             BigDecimal expectedPrice) throws Exception {
 
-        when(getProductPrice.execute (any(), any(), any()))
+        when(getProductPrice.getPrice(any(), any(), any()))
                 .thenReturn(
                         new Price(1L,
                                 35455L,

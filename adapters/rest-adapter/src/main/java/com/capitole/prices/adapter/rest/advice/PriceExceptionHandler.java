@@ -20,19 +20,6 @@ public class PriceExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(PriceExceptionHandler.class);
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<PriceResponse>> ExceptionHandler(Exception e) {
-
-        log.error("Internal error", e);
-
-        NotificationResponse notificationResponse = new NotificationResponse(
-                "Internal Error, see logs",
-                LocalDateTime.now(),
-                "ERR-00");
-        ApiResponse<PriceResponse> apiResponse = new ApiResponse<>(null, notificationResponse);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
-    }
-
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiResponse<PriceResponse>> MissingServletRequestParameterExceptionHandler(MissingServletRequestParameterException e) {
 

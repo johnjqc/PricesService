@@ -4,7 +4,7 @@ import com.capitole.prices.adapters.persistence.entity.PriceEntity;
 import com.capitole.prices.adapters.persistence.mapper.PriceMapper;
 import com.capitole.prices.adapters.persistence.repository.PriceJpaRepository;
 import com.capitole.prices.domain.model.Price;
-import com.capitole.prices.domain.port.PriceRepositoryPort;
+import com.capitole.prices.application.port.out.PriceRepositoryPort;
 
 import java.time.LocalDateTime;
 import java.util.Optional;

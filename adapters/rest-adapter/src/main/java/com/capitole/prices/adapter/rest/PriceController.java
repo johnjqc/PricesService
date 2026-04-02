@@ -32,7 +32,7 @@ public class PriceController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime applicationDate) {
 
-        Price price = getProductPrice.execute(brandId, productId, applicationDate);
+        Price price = getProductPrice.getPrice(brandId, productId, applicationDate);
 
         PriceResponse response = new PriceResponse(
                 price.productId(),

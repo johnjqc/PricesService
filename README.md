@@ -48,3 +48,13 @@ Se valorará:
 Diseño y construcción del servicio.
 Calidad de Código.
 Resultados correctos en los test.
+
+---
+# Arquitectura
+
+```
+REST Adapter  --->  Application (Use Case)  --->  Domain
+                           |
+                           v
+                  Persistence Adapter
+```
