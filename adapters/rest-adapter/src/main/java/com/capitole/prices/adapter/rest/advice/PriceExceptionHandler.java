@@ -3,7 +3,8 @@ package com.capitole.prices.adapter.rest.advice;
 import com.capitole.prices.adapter.rest.dto.ApiResponseDto;
 import com.capitole.prices.adapter.rest.dto.NotificationResponse;
 import com.capitole.prices.adapter.rest.dto.PriceResponse;
-import com.capitole.prices.application.exception.ProductNotFoundException;
+import com.capitole.prices.domain.exception.DomainException;
+import com.capitole.prices.domain.exception.ErrorCode;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,27 +30,17 @@ public class PriceExceptionHandler {
         String message = e.getConstraintViolations().stream()
                 .map(v -> v.getMessage())
                 .findFirst()
-                .orElse("Validation error");
+                .orElse(ErrorCode.VALIDATION_ERROR.getDescription());
 
-        NotificationResponse notificationResponse = new NotificationResponse(
-                message,
-                LocalDateTime.now(),
-                "ERR-01");
-        ApiResponseDto<PriceResponse> apiResponse = new ApiResponseDto<>(null, notificationResponse);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+        return buildResponse(ErrorCode.VALIDATION_ERROR, message, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiResponseDto<PriceResponse>> MissingServletRequestParameterExceptionHandler(MissingServletRequestParameterException e) {
 
-        log.error("Request param error from user", e);
+        log.error("Requested param error from user", e);
 
-        NotificationResponse notificationResponse = new NotificationResponse(
-                "Bad request Error, see logs",
-                LocalDateTime.now(),
-                "ERR-01");
-        ApiResponseDto<PriceResponse> apiResponse = new ApiResponseDto<>(null, notificationResponse);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+        return buildResponse(ErrorCode.VALIDATION_ERROR, e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -57,25 +48,42 @@ public class PriceExceptionHandler {
 
         log.error("Internal error", e);
 
-        NotificationResponse notificationResponse = new NotificationResponse(
-                "Request resource not foud Error, see logs",
-                LocalDateTime.now(),
-                "ERR-02");
-        ApiResponseDto<PriceResponse> apiResponse = new ApiResponseDto<>(null, notificationResponse);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
+        return buildResponse(ErrorCode.RESOURCE_NOT_FOUND, e.getMessage(), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ApiResponseDto<PriceResponse>> handleDomainException(DomainException e) {
 
-    @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ApiResponseDto<PriceResponse>> NoResourceFoundExceptionHandler(ProductNotFoundException e) {
+        log.error("Domain exception", e);
 
-        log.error("Requested product not found", e);
+        HttpStatus status = switch (e.getErrorCode()) {
+            case PRODUCT_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case VALIDATION_ERROR -> HttpStatus.BAD_REQUEST;
+            default -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
+
+        return buildResponse(e.getErrorCode(), e.getMessage(), status);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponseDto<PriceResponse>> handleGenericException(Exception e) {
+
+        log.error("Internal error", e);
+
+        return buildResponse(ErrorCode.INTERNAL_ERROR, e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private ResponseEntity<ApiResponseDto<PriceResponse>> buildResponse(
+            ErrorCode errorCode,
+            String message,
+            HttpStatus status) {
 
         NotificationResponse notificationResponse = new NotificationResponse(
-                "Request product not foud",
+                message,
                 LocalDateTime.now(),
-                "ERR-03");
+                errorCode.getCode());
+
         ApiResponseDto<PriceResponse> apiResponse = new ApiResponseDto<>(null, notificationResponse);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
+        return ResponseEntity.status(status).body(apiResponse);
     }
 }

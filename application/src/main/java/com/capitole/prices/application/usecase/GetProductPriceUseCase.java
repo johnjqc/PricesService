@@ -1,7 +1,7 @@
 package com.capitole.prices.application.usecase;
 
-import com.capitole.prices.application.exception.ProductNotFoundException;
 import com.capitole.prices.application.port.in.GetProductPrice;
+import com.capitole.prices.domain.exception.PriceNotFoundException;
 import com.capitole.prices.domain.model.Price;
 import com.capitole.prices.application.port.outp.PriceRepositoryPort;
 
@@ -29,6 +29,6 @@ public class GetProductPriceUseCase implements GetProductPrice {
                 applicationDate
         );
 
-        return prices.orElseThrow(() -> new ProductNotFoundException(productId, brandId));
+        return prices.orElseThrow(() -> new PriceNotFoundException(productId, brandId));
     }
 }

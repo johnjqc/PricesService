@@ -1,4 +1,4 @@
-package com.capitole.prices.bootstrap;
+package com.capitole.prices.bootstrap.config;
 
 import com.capitole.prices.adapters.persistence.adapter.PriceRepositoryAdapter;
 import com.capitole.prices.adapters.persistence.mapper.PriceMapper;

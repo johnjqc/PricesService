@@ -76,7 +76,8 @@ public class PriceController {
                 price.priceList(),
                 price.startDate(),
                 price.endDate(),
-                price.price());
+                price.price(),
+                price.currency());
 
         NotificationResponse notificationResponse = new NotificationResponse("SUCCESS",
                 LocalDateTime.now(),

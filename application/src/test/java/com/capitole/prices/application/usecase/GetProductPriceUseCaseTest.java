@@ -1,7 +1,7 @@
 package com.capitole.prices.application.usecase;
 
-import com.capitole.prices.application.exception.ProductNotFoundException;
 import com.capitole.prices.application.port.in.GetProductPrice;
+import com.capitole.prices.domain.exception.PriceNotFoundException;
 import com.capitole.prices.domain.model.Price;
 import com.capitole.prices.application.port.outp.PriceRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,14 +63,14 @@ class GetProductPriceUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should throw ProductNotFoundException when no price exists")
+    @DisplayName("Should throw PriceNotFoundException when no price exists")
     void givenNoPrice_whenExecute_thenThrowException() {
 
         when(priceRepository.findApplicablePrice(any(), any(), any()))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.getPrice(BRAND_ID, PRODUCT_ID, APPLICATION_DATE))
-                .isInstanceOf(ProductNotFoundException.class)
+                .isInstanceOf(PriceNotFoundException.class)
                 .hasMessageContaining(String.valueOf(PRODUCT_ID))
                 .hasMessageContaining(String.valueOf(BRAND_ID));
     }
