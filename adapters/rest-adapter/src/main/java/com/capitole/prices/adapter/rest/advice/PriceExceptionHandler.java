@@ -1,9 +1,10 @@
 package com.capitole.prices.adapter.rest.advice;
 
-import com.capitole.prices.adapter.rest.dto.ApiResponse;
+import com.capitole.prices.adapter.rest.dto.ApiResponseDto;
 import com.capitole.prices.adapter.rest.dto.NotificationResponse;
 import com.capitole.prices.adapter.rest.dto.PriceResponse;
 import com.capitole.prices.application.exception.ProductNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -20,8 +21,26 @@ public class PriceExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(PriceExceptionHandler.class);
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponseDto<PriceResponse>> handleConstraintViolationException(ConstraintViolationException e) {
+
+        log.error("Validation error", e);
+
+        String message = e.getConstraintViolations().stream()
+                .map(v -> v.getMessage())
+                .findFirst()
+                .orElse("Validation error");
+
+        NotificationResponse notificationResponse = new NotificationResponse(
+                message,
+                LocalDateTime.now(),
+                "ERR-01");
+        ApiResponseDto<PriceResponse> apiResponse = new ApiResponseDto<>(null, notificationResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+    }
+
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ApiResponse<PriceResponse>> MissingServletRequestParameterExceptionHandler(MissingServletRequestParameterException e) {
+    public ResponseEntity<ApiResponseDto<PriceResponse>> MissingServletRequestParameterExceptionHandler(MissingServletRequestParameterException e) {
 
         log.error("Request param error from user", e);
 
@@ -29,12 +48,12 @@ public class PriceExceptionHandler {
                 "Bad request Error, see logs",
                 LocalDateTime.now(),
                 "ERR-01");
-        ApiResponse<PriceResponse> apiResponse = new ApiResponse<>(null, notificationResponse);
+        ApiResponseDto<PriceResponse> apiResponse = new ApiResponseDto<>(null, notificationResponse);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ApiResponse<PriceResponse>> NoResourceFoundExceptionHandler(NoResourceFoundException e) {
+    public ResponseEntity<ApiResponseDto<PriceResponse>> NoResourceFoundExceptionHandler(NoResourceFoundException e) {
 
         log.error("Internal error", e);
 
@@ -42,13 +61,13 @@ public class PriceExceptionHandler {
                 "Request resource not foud Error, see logs",
                 LocalDateTime.now(),
                 "ERR-02");
-        ApiResponse<PriceResponse> apiResponse = new ApiResponse<>(null, notificationResponse);
+        ApiResponseDto<PriceResponse> apiResponse = new ApiResponseDto<>(null, notificationResponse);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
     }
 
 
     @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ApiResponse<PriceResponse>> NoResourceFoundExceptionHandler(ProductNotFoundException e) {
+    public ResponseEntity<ApiResponseDto<PriceResponse>> NoResourceFoundExceptionHandler(ProductNotFoundException e) {
 
         log.error("Requested product not found", e);
 
@@ -56,7 +75,7 @@ public class PriceExceptionHandler {
                 "Request product not foud",
                 LocalDateTime.now(),
                 "ERR-03");
-        ApiResponse<PriceResponse> apiResponse = new ApiResponse<>(null, notificationResponse);
+        ApiResponseDto<PriceResponse> apiResponse = new ApiResponseDto<>(null, notificationResponse);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
     }
 }

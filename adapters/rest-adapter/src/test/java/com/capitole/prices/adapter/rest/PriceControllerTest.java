@@ -1,5 +1,6 @@
 package com.capitole.prices.adapter.rest;
 
+import com.capitole.prices.adapter.rest.advice.PriceExceptionHandler;
 import com.capitole.prices.application.port.in.GetProductPrice;
 import com.capitole.prices.domain.model.Price;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class PriceControllerTest {
 
     @SpringBootConfiguration
-    @Import(PriceController.class)
+    @Import({PriceController.class, PriceExceptionHandler.class})
     static class TestConfig {}
 
     @Autowired
@@ -70,9 +71,41 @@ public class PriceControllerTest {
     }
 
     @Test
-    void givenMissingParameters_whenGetPrice_thenReturn400() throws Exception {
+    void givenMissingAllParameters_whenGetPrice_thenReturn400() throws Exception {
 
         mockMvc.perform(get("/api/price"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void givenNullProductId_whenGetPrice_thenReturn400WithValidationMessage() throws Exception {
+
+        mockMvc.perform(get("/api/price")
+                        .param("productId", "")
+                        .param("brandId", "1")
+                        .param("applicationDate", "2020-06-14T10:00:00"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.notification.code").value("ERR-01"))
+                .andExpect(jsonPath("$.notification.description").exists());
+    }
+
+    @Test
+    void givenNullBrandId_whenGetPrice_thenReturn400() throws Exception {
+
+        mockMvc.perform(get("/api/price")
+                        .param("productId", "35455")
+                        .param("brandId", "")
+                        .param("applicationDate", "2020-06-14T10:00:00"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void givenNullApplicationDate_whenGetPrice_thenReturn400() throws Exception {
+
+        mockMvc.perform(get("/api/price")
+                        .param("productId", "35455")
+                        .param("brandId", "1")
+                        .param("applicationDate", ""))
                 .andExpect(status().isBadRequest());
     }
 
