@@ -1,7 +1,7 @@
-package com.capitole.prices.persistence.repository;
+package com.capitole.prices.adapters.persistence.repository;
 
-import com.capitole.prices.persistence.config.JpaTestConfig;
-import com.capitole.prices.persistence.entity.PriceEntity;
+import com.capitole.prices.adapters.persistence.config.JpaTestConfig;
+import com.capitole.prices.adapters.persistence.entity.PriceEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PriceRepositoryTest {
 
     @Autowired
-    private PriceRepository priceRepository;
+    private PriceJpaRepository priceRepository;
 
     private static final Long PRODUCT_ID = 35455L;
     private static final Long BRAND_ID = 1L;

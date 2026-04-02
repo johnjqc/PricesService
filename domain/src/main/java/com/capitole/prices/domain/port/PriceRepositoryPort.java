@@ -3,11 +3,11 @@ package com.capitole.prices.domain.port;
 import com.capitole.prices.domain.model.Price;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Optional;
 
 public interface PriceRepositoryPort {
 
-    List<Price> findApplicablePrice(
+    Optional<Price> findApplicablePrice(
             Long brandId,
             Long productId,
             LocalDateTime applicationDate

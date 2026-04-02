@@ -1,4 +1,4 @@
-package com.capitole.prices.persistence.entity;
+package com.capitole.prices.adapters.persistence.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;

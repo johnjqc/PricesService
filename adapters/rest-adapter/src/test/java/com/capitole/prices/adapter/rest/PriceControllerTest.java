@@ -1,6 +1,6 @@
 package com.capitole.prices.adapter.rest;
 
-import com.capitole.prices.application.usecase.GetProductPrice;
+import com.capitole.prices.application.port.in.GetProductPrice;
 import com.capitole.prices.domain.model.Price;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

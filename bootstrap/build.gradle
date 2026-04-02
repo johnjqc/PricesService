@@ -5,6 +5,8 @@ plugins {
 }
 
 dependencies {
+
+    implementation project(':domain')
     implementation project(':application')
     implementation project(':adapters:rest-adapter')
     implementation project(':adapters:persistence-adapter')

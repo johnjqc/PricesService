@@ -1,4 +1,4 @@
-package com.capitole.prices.application.usecase;
+package com.capitole.prices.application.port.in;
 
 import com.capitole.prices.domain.model.Price;
 

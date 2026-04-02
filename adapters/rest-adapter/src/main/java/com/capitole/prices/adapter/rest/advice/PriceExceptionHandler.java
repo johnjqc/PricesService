@@ -3,6 +3,7 @@ package com.capitole.prices.adapter.rest.advice;
 import com.capitole.prices.adapter.rest.dto.ApiResponse;
 import com.capitole.prices.adapter.rest.dto.NotificationResponse;
 import com.capitole.prices.adapter.rest.dto.PriceResponse;
+import com.capitole.prices.application.exception.ProductNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -54,6 +55,20 @@ public class PriceExceptionHandler {
                 "Request resource not foud Error, see logs",
                 LocalDateTime.now(),
                 "ERR-02");
+        ApiResponse<PriceResponse> apiResponse = new ApiResponse<>(null, notificationResponse);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
+    }
+
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<ApiResponse<PriceResponse>> NoResourceFoundExceptionHandler(ProductNotFoundException e) {
+
+        log.error("Requested product not found", e);
+
+        NotificationResponse notificationResponse = new NotificationResponse(
+                "Request product not foud",
+                LocalDateTime.now(),
+                "ERR-03");
         ApiResponse<PriceResponse> apiResponse = new ApiResponse<>(null, notificationResponse);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
     }
