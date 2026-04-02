@@ -3,7 +3,7 @@ package com.capitole.prices.application.usecase;
 import com.capitole.prices.application.exception.ProductNotFoundException;
 import com.capitole.prices.application.port.in.GetProductPrice;
 import com.capitole.prices.domain.model.Price;
-import com.capitole.prices.application.port.out.PriceRepositoryPort;
+import com.capitole.prices.application.port.outp.PriceRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
