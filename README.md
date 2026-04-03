@@ -1,60 +1,235 @@
 # PricesService
 
-En la base de datos de comercio electrónico de la compañía disponemos de la tabla PRICES que refleja el precio final (pvp) y la tarifa que aplica a un producto de una cadena entre unas fechas determinadas. A continuación se muestra un ejemplo de la tabla con los campos relevantes:
-
-## Tabla PRICES
-
-| BRAND_ID | START_DATE           | END_DATE             | PRICE_LIST | PRODUCT_ID | PRIORITY | PRICE | CURR |
-|----------|----------------------|----------------------|------------|------------|----------|-------|------|
-| 1        | 2020-06-14 00:00:00 | 2020-12-31 23:59:59 | 1          | 35455      | 0        | 35.50 | EUR  |
-| 1        | 2020-06-14 15:00:00 | 2020-06-14 18:30:00 | 2          | 35455      | 1        | 25.45 | EUR  |
-| 1        | 2020-06-15 00:00:00 | 2020-06-15 11:00:00 | 3          | 35455      | 1        | 30.50 | EUR  |
-| 1        | 2020-06-15 16:00:00 | 2020-12-31 23:59:59 | 4          | 35455      | 1        | 38.95 | EUR  |
-
-Campos:
-
-| Campo | Descripción |
-|------|-------------|
-| **BRAND_ID** | Foreign key de la cadena del grupo (ej: `1 = ZARA`). |
-| **START_DATE** | Fecha de inicio del rango en el que aplica el precio. |
-| **END_DATE** | Fecha de fin del rango en el que aplica el precio. |
-| **PRICE_LIST** | Identificador de la tarifa de precios aplicable. |
-| **PRODUCT_ID** | Identificador del producto. |
-| **PRIORITY** | Desambiguador de aplicación de precios. Si dos tarifas coinciden en un rango de fechas se aplica la de mayor prioridad (mayor valor numérico). |
-| **PRICE** | Precio final de venta del producto. |
-| **CURR** | Código ISO de la moneda (ej: `EUR`). |
-
-Se pide:
-
-Construir una aplicación/servicio en SpringBoot que provea una end point rest de consulta  tal que:
-
-Acepte como parámetros de entrada: fecha de aplicación, identificador de producto, identificador de cadena.
-Devuelva como datos de salida: identificador de producto, identificador de cadena, tarifa a aplicar, fechas de aplicación y precio final a aplicar.
-
-Se debe utilizar una base de datos en memoria (tipo h2) e inicializar con los datos del ejemplo, (se pueden cambiar el nombre de los campos y añadir otros nuevos si se quiere, elegir el tipo de dato que se considere adecuado para los mismos).
-
-Desarrollar unos test al endpoint rest que  validen las siguientes peticiones al servicio con los datos del ejemplo:
-
-```
--          Test 1: petición a las 10:00 del día 14 del producto 35455   para la brand 1 (ZARA)
--          Test 2: petición a las 16:00 del día 14 del producto 35455   para la brand 1 (ZARA)
--          Test 3: petición a las 21:00 del día 14 del producto 35455   para la brand 1 (ZARA)
--          Test 4: petición a las 10:00 del día 15 del producto 35455   para la brand 1 (ZARA)
--          Test 5: petición a las 21:00 del día 16 del producto 35455   para la brand 1 (ZARA)
-```
-
-Se valorará:
-
-Diseño y construcción del servicio.
-Calidad de Código.
-Resultados correctos en los test.
+A backend service for retrieving product prices based on brand, product, and application date. The service implements **Hexagonal Architecture (Ports and Adapters)** to ensure clean separation of concerns and testability.
 
 ---
-# Arquitectura
+
+## Architecture
+
+This project follows **Hexagonal Architecture** (also known as Ports and Adapters), which establishes a clear boundary between the core business logic and external systems.
 
 ```
-REST Adapter  --->  Application (Use Case)  --->  Domain
-                           |
-                           v
-                  Persistence Adapter
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              BOOTSTRAP                                      │
+│                    (Application Entry Point)                               │
+└────────────────────────────────┬────────────────────────────────────────────┘
+                                 │
+         ┌───────────────────────┼───────────────────────┐
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────────┐
+│      DOMAIN     │    │   APPLICATION  │    │       ADAPTERS      │
+│                 │    │                 │    │                     │
+│  - Models       │    │  - Use Cases    │    │  REST Adapter       │
+│  - Exceptions   │    │  - Input Ports  │    │  (PriceController) │
+│  - Business     │    │  - Output Ports │    │                     │
+│    Logic        │    │                 │    │  Persistence Adapter│
+│                 │    │                 │    │  (JPA Repository)   │
+└─────────────────┘    └─────────────────┘    └─────────────────────┘
 ```
+
+### Layer Responsibilities
+
+| Layer | Description |
+|-------|-------------|
+| **Domain** | Core business entities, exceptions, and domain logic. Has no external dependencies. |
+| **Application** | Use cases, input/output ports, and DTOs. Orchestrates the flow between domain and adapters. |
+| **Adapters** | Implementations of ports. REST adapter exposes endpoints; Persistence adapter handles database operations. |
+| **Bootstrap** | Spring Boot application entry point that wires all components together. |
+
+---
+
+## Tech Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Java | 21 | Programming language |
+| Spring Boot | 3.2.5 | Application framework |
+| Gradle | 8.x | Build tool |
+| JUnit 5 | 5.10.2 | Unit testing |
+| H2 Database | - | In-memory database for testing |
+| SpringDoc OpenAPI | 2.5.0 | API documentation (Swagger) |
+| AssertJ | 3.25.3 | Testing assertions |
+| Mockito | 5.8.0 | Mocking framework |
+
+---
+
+## Project Structure
+
+```
+PricesService/
+├── domain/                          # Core business logic (no dependencies)
+│   └── src/main/java/.../
+│       ├── model/Price.java         # Domain entity
+│       └── exception/                # Domain exceptions
+│
+├── application/                     # Use cases and ports
+│   └── src/main/java/.../
+│       ├── port/
+│       │   ├── in/GetProductPrice.java      # Input port (interface)
+│       │   └── outp/PriceRepositoryPort.java # Output port (interface)
+│       ├── usecase/                          # Use case implementations
+│       └── dto/                              # Application DTOs
+│
+├── adapters/
+│   ├── rest-adapter/                # REST API layer
+│   │   └── src/main/java/.../
+│   │       ├── rest/                       # Controllers
+│   │       │   └── PriceController.java
+│   │       ├── factory/                     # Response factories
+│   │       ├── dto/                         # API DTOs
+│   │       └── advice/                      # Exception handlers
+│   │
+│   └── persistence-adapter/          # Database layer
+│       └── src/main/java/.../
+│           ├── entity/                     # JPA entities
+│           ├── repository/                   # JPA repositories
+│           ├── mapper/                       # Entity-Domain mappers
+│           └── adapter/                      # Port implementations
+│
+└── bootstrap/                        # Application entry point
+    └── src/main/java/.../
+        ├── ApplicationBootstrap.java         # Spring Boot main class
+        └── config/                           # Bean configuration
+```
+
+---
+
+## API
+
+### Main Endpoint
+
+`GET /api/price`
+
+Retrieves the applicable price for a product based on brand and application date.
+
+#### Request Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `productId` | Long | Yes | Product identifier |
+| `brandId` | Long | Yes | Brand identifier |
+| `applicationDate` | LocalDateTime | Yes | Date and time in ISO 8601 format |
+
+#### Example Request
+
+```bash
+curl -X GET "http://localhost:8080/api/price?productId=35455&brandId=1&applicationDate=2020-06-14T10:00:00"
+```
+
+#### Response
+
+```json
+{
+  "data": {
+    "productId": 35455,
+    "brandId": 1,
+    "priceList": 1,
+    "startDate": "2020-06-14T00:00:00",
+    "endDate": "2020-12-31T23:59:59",
+    "price": 35.50,
+    "currency": "EUR"
+  },
+  "notification": {
+    "description": "Operation successful",
+    "responseTime": "2026-04-03T10:30:00",
+    "code": "SCS-00"
+  }
+}
+```
+
+#### Error Responses
+
+| Code | Description |
+|------|-------------|
+| 400 | Bad Request - Invalid parameters |
+| 404 | Price not found for the given criteria |
+
+---
+
+## Getting Started
+
+### Requirements
+
+To run the application locally you need:
+
+- **Java**: 21 or higher
+- **Gradle**: 8.x (wrapper included)
+
+Alternatively, you can run the application using **Docker**, without installing Java or Gradle.
+
+### Build the Project
+
+```bash
+./gradlew build
+```
+
+### Run the Application
+
+```bash
+./gradlew :bootstrap:bootRun
+```
+
+### Running with Docker
+
+The application can also be executed using Docker without installing Java or Gradle locally.
+
+#### Build the Docker Image
+
+```bash
+docker build -t prices-service .
+docker run -p 8080:8080 prices-service
+```
+
+The application will start on `http://localhost:8080`.
+
+### Run Tests
+
+```bash
+# Run all tests
+./gradlew test
+
+# Run tests with detailed output
+./gradlew test --info
+```
+
+### API Documentation
+
+When the application is running, access the Swagger UI at:
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+---
+
+## Testing
+
+The project includes multiple test layers:
+
+| Test Type | Location | Description |
+|-----------|----------|-------------|
+| **Unit Tests** | `domain/`, `application/` | Test domain logic and use cases |
+| **Repository Tests** | `persistence-adapter/` | Test JPA queries with H2 |
+| **Controller Tests** | `rest-adapter/` | Test REST endpoints with mocked services |
+| **E2E Tests** | `bootstrap/` | Full integration tests with real database |
+
+### Test Coverage
+
+- Domain model logic (price resolution by priority)
+- Use case orchestration
+- REST API endpoints
+- JPA repository queries
+- Exception handling
+
+---
+
+## Changelog
+
+All notable changes to this project are documented in the [CHANGELOG.md](CHANGELOG.md) file.
+
+---
+
+## License
+
+This project is for demonstration purposes.
