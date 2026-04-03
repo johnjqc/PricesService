@@ -1,9 +1,14 @@
 package com.capitole.prices.adapter.rest;
 
 import com.capitole.prices.adapter.rest.dto.ApiResponseDto;
-import com.capitole.prices.adapter.rest.dto.NotificationResponse;
+import com.capitole.prices.adapter.rest.factory.ApiResponseFactory;
+import com.capitole.prices.adapter.rest.factory.PriceResponseFactory;
 import com.capitole.prices.adapter.rest.dto.PriceResponse;
 import com.capitole.prices.application.port.in.GetProductPrice;
+import com.capitole.prices.application.dto.ApplicationError;
+import com.capitole.prices.application.dto.PriceFailure;
+import com.capitole.prices.application.dto.PriceResult;
+import com.capitole.prices.application.dto.PriceSuccess;
 import com.capitole.prices.domain.model.Price;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,6 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -68,22 +74,16 @@ public class PriceController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime applicationDate) {
 
-        Price price = getProductPrice.getPrice(brandId, productId, applicationDate);
+        PriceResult<Price, ApplicationError> result = getProductPrice.findApplicablePrice(brandId, productId, applicationDate);
 
-        PriceResponse response = new PriceResponse(
-                price.productId(),
-                price.brandId(),
-                price.priceList(),
-                price.startDate(),
-                price.endDate(),
-                price.price(),
-                price.currency());
+        return switch (result) {
 
-        NotificationResponse notificationResponse = new NotificationResponse("SUCCESS",
-                LocalDateTime.now(),
-                "SCS-00");
-        ApiResponseDto<PriceResponse> apiResponse = new ApiResponseDto<>(response, notificationResponse);
+            case PriceSuccess<Price, ApplicationError> success ->
+                    ResponseEntity.ok(ApiResponseFactory.success(PriceResponseFactory.fromDomain(success.value())));
 
-        return ResponseEntity.ok(apiResponse);
+            case PriceFailure<Price, ApplicationError> failure ->
+                    ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(ApiResponseFactory.error(failure.error().code(), failure.error().message(), HttpStatus.NOT_FOUND));
+        };
     }
 }

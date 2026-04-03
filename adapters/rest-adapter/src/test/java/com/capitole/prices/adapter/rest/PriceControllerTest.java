@@ -2,6 +2,9 @@ package com.capitole.prices.adapter.rest;
 
 import com.capitole.prices.adapter.rest.advice.PriceExceptionHandler;
 import com.capitole.prices.application.port.in.GetProductPrice;
+import com.capitole.prices.application.dto.ApplicationError;
+import com.capitole.prices.application.dto.PriceResult;
+import com.capitole.prices.domain.exception.ErrorCode;
 import com.capitole.prices.domain.model.Price;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,17 +52,17 @@ public class PriceControllerTest {
             int expectedPriceList,
             BigDecimal expectedPrice) throws Exception {
 
-        when(getProductPrice.getPrice(any(), any(), any()))
-                .thenReturn(
-                        new Price(1L,
-                                35455L,
-                                expectedPriceList,
-                                0,
-                                LocalDateTime.parse("2020-06-14T15:00:00"),
-                                LocalDateTime.parse("2020-06-14T18:30:00"),
-                                expectedPrice,
-                                "EUR")
-                );
+        Price price = new Price(1L,
+                35455L,
+                expectedPriceList,
+                0,
+                LocalDateTime.parse("2020-06-14T15:00:00"),
+                LocalDateTime.parse("2020-06-14T18:30:00"),
+                expectedPrice,
+                "EUR");
+
+        when(getProductPrice.findApplicablePrice(any(), any(), any()))
+                .thenReturn(PriceResult.ok(price));
 
         mockMvc.perform(get("/api/price")
                         .param("productId", "35455")
@@ -68,6 +71,26 @@ public class PriceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.priceList").value(expectedPriceList))
                 .andExpect(jsonPath("$.data.price").value(expectedPrice.doubleValue()));
+    }
+
+    @Test
+    void givenNoPrice_whenGetPrice_thenReturn404() throws Exception {
+
+        when(getProductPrice.findApplicablePrice(any(), any(), any()))
+                .thenReturn(
+                        PriceResult.fail(
+                                new ApplicationError(
+                                        ErrorCode.PRICE_NOT_FOUND,
+                                        "Price not found"
+                                )
+                        )
+                );
+
+        mockMvc.perform(get("/api/price")
+                        .param("productId", "35455")
+                        .param("brandId", "1")
+                        .param("applicationDate", "2020-06-14T10:00:00"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -85,7 +108,7 @@ public class PriceControllerTest {
                         .param("brandId", "1")
                         .param("applicationDate", "2020-06-14T10:00:00"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.notification.code").value("ERR-01"))
+                .andExpect(jsonPath("$.notification.code").value(ErrorCode.VALIDATION_ERROR.getCode()))
                 .andExpect(jsonPath("$.notification.description").exists());
     }
 

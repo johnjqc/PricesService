@@ -7,7 +7,7 @@ import com.capitole.prices.domain.model.Price;
 import com.capitole.prices.application.port.outp.PriceRepositoryPort;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 public class PriceRepositoryAdapter implements PriceRepositoryPort {
 
@@ -20,15 +20,16 @@ public class PriceRepositoryAdapter implements PriceRepositoryPort {
     }
 
     @Override
-    public Optional<Price> findApplicablePrice(Long brandId, Long productId, LocalDateTime applicationDate) {
+    public List<Price> findApplicablePrices(Long brandId, Long productId, LocalDateTime applicationDate) {
 
-        Optional<PriceEntity> entity = repository.findFirstByProductIdAndBrandIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByPriorityDesc(
+        List<PriceEntity> entities = repository.findByBrandProductAndDate(
                 productId,
                 brandId,
-                applicationDate,
                 applicationDate
         );
 
-        return entity.map(priceMapper::toDomain);
+        return entities.stream()
+                .map(priceMapper::toDomain)
+                .toList();
     }
 }

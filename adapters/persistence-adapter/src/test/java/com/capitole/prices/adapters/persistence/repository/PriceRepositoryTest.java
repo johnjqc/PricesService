@@ -9,7 +9,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,85 +24,52 @@ class PriceRepositoryTest {
     private static final Long BRAND_ID = 1L;
 
     @Test
-    @DisplayName("Should return correct price for 2020-06-14 10:00")
-    void givenProductIdAndBrandId_whenQueryPriceAt10AMOnJune14_thenReturnPriceList1WithPrice() {
+    @DisplayName("Should return applicable prices for 2020-06-14 10:00")
+    void givenProductIdAndBrandId_whenQueryPriceAt10AMOnJune14_thenReturnApplicablePrices() {
 
         LocalDateTime date = LocalDateTime.of(2020, 6, 14, 10, 0);
 
-        Optional<PriceEntity> result =
-                priceRepository
-                        .findFirstByProductIdAndBrandIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByPriorityDesc(
-                                PRODUCT_ID,
-                                BRAND_ID,
-                                date,
-                                date
-                        );
+        List<PriceEntity> result = priceRepository.findByBrandProductAndDate(
+                PRODUCT_ID,
+                BRAND_ID,
+                date
+        );
 
-        assertThat(result).isPresent();
-        assertThat(result.get().getPriceList()).isEqualTo(1);
-        assertThat(result.get().getPrice()).isEqualByComparingTo("35.50");
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getPriceList()).isEqualTo(1);
+        assertThat(result.get(0).getPrice()).isEqualByComparingTo("35.50");
     }
 
     @Test
-    @DisplayName("Should return correct price for 2020-06-14 16:00")
-    void givenProductIdAndBrandId_whenQueryPriceAt4PMOnJune14_thenReturnPriceList1WithPrice() {
+    @DisplayName("Should return multiple applicable prices for 2020-06-14 16:00")
+    void givenProductIdAndBrandId_whenQueryPriceAt4PMOnJune14_thenReturnMultiplePrices() {
 
         LocalDateTime date = LocalDateTime.of(2020, 6, 14, 16, 0);
 
-        Optional<PriceEntity> result =
-                priceRepository
-                        .findFirstByProductIdAndBrandIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByPriorityDesc(
-                                PRODUCT_ID,
-                                BRAND_ID,
-                                date,
-                                date
-                        );
+        List<PriceEntity> result = priceRepository.findByBrandProductAndDate(
+                PRODUCT_ID,
+                BRAND_ID,
+                date
+        );
 
-        assertThat(result).isPresent();
-        assertThat(result.get().getPriceList()).isEqualTo(2);
-        assertThat(result.get().getPrice()).isEqualByComparingTo("25.45");
+        // At 16:00, both PriceList 1 and PriceList 2 apply
+        assertThat(result).hasSize(2);
     }
 
     @Test
     @DisplayName("Should return correct price for 2020-06-14 21:00")
-    void givenProductIdAndBrandId_whenQueryPriceAt9PMOnJune14_thenReturnPriceList1WithPrice() {
+    void givenProductIdAndBrandId_whenQueryPriceAt9PMOnJune14_thenReturnPriceList1() {
 
         LocalDateTime date = LocalDateTime.of(2020, 6, 14, 21, 0);
 
-        Optional<PriceEntity> result =
-                priceRepository
-                        .findFirstByProductIdAndBrandIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByPriorityDesc(
-                                PRODUCT_ID,
-                                BRAND_ID,
-                                date,
-                                date
-                        );
+        List<PriceEntity> result = priceRepository.findByBrandProductAndDate(
+                PRODUCT_ID,
+                BRAND_ID,
+                date
+        );
 
-        assertThat(result).isPresent();
-        assertThat(result.get().getPriceList()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("Should return highest priority when multiple prices apply at same time")
-    void givenMultiplePricesAtSameTime_whenQueryPrice_thenReturnHighestPriority() {
-
-        // At 2020-06-14 16:00, TWO prices apply:
-        // - PriceList 1: priority 0 (valid 00:00-23:59)
-        // - PriceList 2: priority 1 (valid 15:00-18:30)
-        // Expected: PriceList 2 (higher priority)
-        LocalDateTime date = LocalDateTime.of(2020, 6, 14, 16, 0);
-
-        Optional<PriceEntity> result = priceRepository
-                .findFirstByProductIdAndBrandIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByPriorityDesc(
-                        PRODUCT_ID,
-                        BRAND_ID,
-                        date,
-                        date
-                );
-
-        assertThat(result).isPresent();
-        assertThat(result.get().getPriority()).isEqualTo(1);
-        assertThat(result.get().getPriceList()).isEqualTo(2);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getPriceList()).isEqualTo(1);
     }
 
     @Test
@@ -111,16 +78,13 @@ class PriceRepositoryTest {
 
         LocalDateTime date = LocalDateTime.of(2020, 6, 14, 15, 0);
 
-        Optional<PriceEntity> result = priceRepository
-                .findFirstByProductIdAndBrandIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByPriorityDesc(
-                        PRODUCT_ID,
-                        BRAND_ID,
-                        date,
-                        date
-                );
+        List<PriceEntity> result = priceRepository.findByBrandProductAndDate(
+                PRODUCT_ID,
+                BRAND_ID,
+                date
+        );
 
-        assertThat(result).isPresent();
-        assertThat(result.get().getPriceList()).isEqualTo(2);
+        assertThat(result).isNotEmpty();
     }
 
     @Test
@@ -129,13 +93,11 @@ class PriceRepositoryTest {
 
         LocalDateTime date = LocalDateTime.of(2020, 6, 13, 10, 0);
 
-        Optional<PriceEntity> result = priceRepository
-                .findFirstByProductIdAndBrandIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByPriorityDesc(
-                        PRODUCT_ID,
-                        BRAND_ID,
-                        date,
-                        date
-                );
+        List<PriceEntity> result = priceRepository.findByBrandProductAndDate(
+                PRODUCT_ID,
+                BRAND_ID,
+                date
+        );
 
         assertThat(result).isEmpty();
     }

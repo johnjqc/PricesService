@@ -1,0 +1,25 @@
+info:
+  name: Test 5
+  type: http
+  seq: 5
+
+http:
+  method: get
+  url: http://localhost:8080/api/price?productId=35455&brandId=1&applicationDate=2020-06-16T21:00:00
+  params:
+    - name: productId
+      value: "35455"
+      type: query
+    - name: brandId
+      value: "1"
+      type: query
+    - name: applicationDate
+      value: 2020-06-16T21:00:00
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

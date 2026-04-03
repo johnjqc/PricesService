@@ -1,7 +1,11 @@
 package com.capitole.prices.application.usecase;
 
+import com.capitole.prices.application.dto.ApplicationError;
+import com.capitole.prices.application.dto.PriceFailure;
+import com.capitole.prices.application.dto.PriceResult;
+import com.capitole.prices.application.dto.PriceSuccess;
 import com.capitole.prices.application.port.in.GetProductPrice;
-import com.capitole.prices.domain.exception.PriceNotFoundException;
+import com.capitole.prices.domain.exception.ErrorCode;
 import com.capitole.prices.domain.model.Price;
 import com.capitole.prices.application.port.outp.PriceRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +15,7 @@ import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -22,7 +26,6 @@ import static org.mockito.Mockito.when;
 class GetProductPriceUseCaseTest {
 
     private PriceRepositoryPort priceRepository;
-
     private GetProductPrice useCase;
 
     private static final Long PRODUCT_ID = 35455L;
@@ -50,53 +53,75 @@ class GetProductPriceUseCaseTest {
                 "EUR"
         );
 
-        when(priceRepository.findApplicablePrice(eq(BRAND_ID), eq(PRODUCT_ID), eq(APPLICATION_DATE)))
-                .thenReturn(Optional.of(expectedPrice));
+        when(priceRepository.findApplicablePrices(eq(BRAND_ID), eq(PRODUCT_ID), eq(APPLICATION_DATE)))
+                .thenReturn(List.of(expectedPrice));
 
-        Price result = useCase.getPrice(BRAND_ID, PRODUCT_ID, APPLICATION_DATE);
+        PriceResult<Price, ApplicationError> result = useCase.findApplicablePrice(BRAND_ID, PRODUCT_ID, APPLICATION_DATE);
+
+        assertThat(result).isInstanceOf(PriceSuccess.class);
+        Price price = ((PriceSuccess<Price, ApplicationError>) result).value();
 
         assertThat(result).isNotNull();
-        assertThat(result.productId()).isEqualTo(PRODUCT_ID);
-        assertThat(result.brandId()).isEqualTo(BRAND_ID);
-        assertThat(result.priceList()).isEqualTo(2);
-        assertThat(result.price()).isEqualByComparingTo(new BigDecimal("25.45"));
+        assertThat(price.productId()).isEqualTo(PRODUCT_ID);
+        assertThat(price.brandId()).isEqualTo(BRAND_ID);
+        assertThat(price.priceList()).isEqualTo(2);
+        assertThat(price.price()).isEqualByComparingTo(new BigDecimal("25.45"));
     }
 
     @Test
-    @DisplayName("Should throw PriceNotFoundException when no price exists")
-    void givenNoPrice_whenExecute_thenThrowException() {
+    void givenNoPrice_whenExecute_thenReturnFailure() {
 
-        when(priceRepository.findApplicablePrice(any(), any(), any()))
-                .thenReturn(Optional.empty());
+        when(priceRepository.findApplicablePrices(
+                eq(BRAND_ID),
+                eq(PRODUCT_ID),
+                eq(APPLICATION_DATE)))
+                .thenReturn(List.of());
 
-        assertThatThrownBy(() -> useCase.getPrice(BRAND_ID, PRODUCT_ID, APPLICATION_DATE))
-                .isInstanceOf(PriceNotFoundException.class)
-                .hasMessageContaining(String.valueOf(PRODUCT_ID))
-                .hasMessageContaining(String.valueOf(BRAND_ID));
+        PriceResult<Price, ApplicationError> result =
+                useCase.findApplicablePrice(BRAND_ID, PRODUCT_ID, APPLICATION_DATE);
+
+        assertThat(result).isInstanceOf(PriceFailure.class);
+
+        if (result instanceof PriceFailure<Price, ApplicationError>(ApplicationError error)) {
+            assertThat(error.code()).isEqualTo(ErrorCode.PRICE_NOT_FOUND);
+        }
     }
 
     @Test
     @DisplayName("Should return highest priority price when multiple prices apply")
     void givenMultiplePricesWithDifferentPriorities_whenExecute_thenReturnHighestPriority() {
 
-        // When multiple prices apply, the repository already returns the highest priority
-        Price highestPriorityPrice = new Price(
+        Price lowerPriorityPrice = new Price(
                 BRAND_ID,
                 PRODUCT_ID,
-                2,          // priceList with higher priority
-                1,          // higher priority value
+                1,
+                0,
+                LocalDateTime.of(2020, 6, 14, 0, 0),
+                LocalDateTime.of(2020, 6, 14, 23, 59),
+                new BigDecimal("35.50"),
+                "EUR"
+        );
+
+        Price higherPriorityPrice = new Price(
+                BRAND_ID,
+                PRODUCT_ID,
+                2,
+                1,
                 LocalDateTime.of(2020, 6, 14, 15, 0),
                 LocalDateTime.of(2020, 6, 14, 18, 30),
                 new BigDecimal("25.45"),
                 "EUR"
         );
 
-        when(priceRepository.findApplicablePrice(eq(BRAND_ID), eq(PRODUCT_ID), eq(APPLICATION_DATE)))
-                .thenReturn(Optional.of(highestPriorityPrice));
+        when(priceRepository.findApplicablePrices(eq(BRAND_ID), eq(PRODUCT_ID), eq(APPLICATION_DATE)))
+                .thenReturn(List.of(lowerPriorityPrice, higherPriorityPrice));
 
-        Price result = useCase.getPrice(BRAND_ID, PRODUCT_ID, APPLICATION_DATE);
+        PriceResult<Price, ApplicationError> result = useCase.findApplicablePrice(BRAND_ID, PRODUCT_ID, APPLICATION_DATE);
 
-        assertThat(result.priority()).isEqualTo(1);
-        assertThat(result.priceList()).isEqualTo(2);
+        assertThat(result).isInstanceOf(PriceSuccess.class);
+        Price price = ((PriceSuccess<Price, ApplicationError>) result).value();
+
+        assertThat(price.priority()).isEqualTo(1);
+        assertThat(price.priceList()).isEqualTo(2);
     }
 }

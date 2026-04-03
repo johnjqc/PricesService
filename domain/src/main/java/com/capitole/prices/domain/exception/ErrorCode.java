@@ -5,7 +5,7 @@ public enum ErrorCode {
     SUCCESS("SCS-00", "Operation successful"),
     VALIDATION_ERROR("ERR-01", "Validation error"),
     RESOURCE_NOT_FOUND("ERR-02", "Resource not found"),
-    PRODUCT_NOT_FOUND("ERR-03", "Product not found"),
+    PRICE_NOT_FOUND("ERR-03", "Price not found"),
     INTERNAL_ERROR("ERR-00", "Internal server error");
 
     private final String code;
